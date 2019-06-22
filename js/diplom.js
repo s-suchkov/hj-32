@@ -12,3 +12,7 @@ newLoad.addEventListener('change', (event) => {
     let file = event.currentTarget.files
     console.log(file)
 })
+const currentImage = document.querySelector('.current-image')
+const commentsForm = document.querySelector('.comments__form')
+currentImage.style.display = 'none'
+commentsForm.style.display = 'none'
