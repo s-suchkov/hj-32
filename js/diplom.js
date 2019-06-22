@@ -7,12 +7,19 @@ const share = document.querySelector('.share')
 share.style.display = 'none'
 const newLoad = document.querySelector('.new')
 newLoad.type = 'file'
-// newLoad.accept = 'image/jpeg, image/png'
-newLoad.addEventListener('change', (event) => {
-    let file = event.currentTarget.files
-    console.log(file)
-})
 const currentImage = document.querySelector('.current-image')
 const commentsForm = document.querySelector('.comments__form')
-currentImage.style.display = 'none'
+currentImage.src = ''
 commentsForm.style.display = 'none'
+newLoad.addEventListener('click', () => {
+    let input = createElement('input')
+    input.type = 'file'
+    input.accept = 'image/jpeg, image/png'
+    input.addEventListener('change', (event) => {
+        let file = event.currentTarget.files[0]
+        currentImage.src = URL.createObjectURL(file);
+        currentImage.addEventListener('load', event => {
+            URL.revokeObjectURL(event.target.src);
+        });
+    })
+})
