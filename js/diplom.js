@@ -11,11 +11,8 @@ const xhr = new XMLHttpRequest()
 let loading = false
 const shareTools = document.querySelector('.share-tools')
 const drawTools = document.querySelector('.draw-tools')
-let wsWeb = false
-if (sessionStorage.web) {
-    let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
-    wsWeb = true
-}
+let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
+
 let div = document.querySelector('.app')
 let comment = commentsForm.querySelector('.comment')
 let cloneComment = comment.cloneNode(true)
@@ -103,12 +100,14 @@ function xhrLoad(form) {
         burger.style.display = 'inline-block'
         draw.style.display = 'none'
         comments.style.display = 'none'
-        shareTools.querySelector('.menu__url').value = window.location.href
+        shareTools.querySelector('.menu__url').value = location.href
         canvas.width = currentImage.clientWidth
         canvas.height = currentImage.clientHeight
         canvas.style.marginTop = `-${canvas.height/2}px`
         img.height = canvas.height
         img.style.marginTop = `-${img.height/2}px`
+
+        ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
         wsLoad(sessionStorage.web)
         loading = true
     })
@@ -118,7 +117,7 @@ function xhrLoad(form) {
 }
 function wsLoad(id) {
     if (!loading) {
-        let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${id}`)
+        // let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${id}`)
         ws.addEventListener('message', (event) => {
             console.log('xaxa')
             let info = JSON.parse(event.data)
@@ -131,9 +130,9 @@ function wsLoad(id) {
               }
             } else if (info.event === 'mask') {
               img.src = info.url
-              img.addEventListener('load', () => {
-                  ctx.clearRect(0, 0, canvas.width, canvas.height)
-              })
+              // img.addEventListener('load', () => {
+              //     ctx.clearRect(0, 0, canvas.width, canvas.height)
+              // })
             } else if (info.event === 'comment') {
                 let form = null
                 console.log(document.querySelectorAll('form'))
@@ -172,8 +171,8 @@ function xhrGet() {
         console.log(JSON.parse(xhr.responseText))
         currentImage.src = JSON.parse(xhr.responseText).url
         currentImage.style.display = 'inline-block'
-        share.style.display = 'inline-block'
-        shareTools.style.display = 'inline-block'
+        comments.style.display = 'inline-block'
+        document.querySelector('.comments-tools').style.display = 'inline-block'
         burger.style.display = 'inline-block'
         shareTools.querySelector('.menu__url').value = currentImage.src
         newLoad.style.display = 'none'
@@ -384,8 +383,7 @@ let marker = true
 // ws.addEventListener('close', event => {
 //     console.log(event.code);
 // });
-if (wsWeb) {
-    ws.addEventListener('message', (event) => {
+ws.addEventListener('message', (event) => {
         console.log('xaxa')
         let info = JSON.parse(event.data)
         console.log(info)
@@ -421,8 +419,8 @@ if (wsWeb) {
 
         }
 
-    })
-}
+})
+
 document.addEventListener('click', (event) => {
     if (event.target.classList.contains('menu__toggle')) {
         if (event.target.value === 'on') {
