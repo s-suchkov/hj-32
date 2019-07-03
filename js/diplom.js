@@ -8,16 +8,30 @@ const currentImage = document.querySelector('.current-image')
 const commentsForm = document.querySelector('.comments__form')
 let error = document.querySelector('.error')
 const xhr = new XMLHttpRequest()
+let loading = false
 const shareTools = document.querySelector('.share-tools')
 const drawTools = document.querySelector('.draw-tools')
+let wsWeb = false
+if (sessionStorage.web) {
+    let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
+    wsWeb = true
+}
+let div = document.querySelector('.app')
+let comment = commentsForm.querySelector('.comment')
+let cloneComment = comment.cloneNode(true)
+document.querySelector('.comments__body').removeChild(commentsForm.querySelector('.comment'))
+document.querySelector('.comments__body').removeChild(commentsForm.querySelector('.comment'))
+document.querySelector('.comments__body').removeChild(commentsForm.querySelector('.comment'))
+let clone = commentsForm.cloneNode(true)
 
+const delForm = div.removeChild(commentsForm)
 comments.style.display = 'none'
 draw.style.display = 'none'
 share.style.display = 'none'
 burger.style.display = 'none'
 newLoad.type = 'file'
 currentImage.style.display = 'none'
-commentsForm.style.display = 'none'
+// commentsForm.style.display = 'none'
 
 let xhrParse = null
 let input = document.createElement('input')
@@ -36,24 +50,7 @@ newLoad.addEventListener('click', () => {
             let form = new FormData()
             form.append('title', file.name)
             form.append('image', file)
-            xhr.addEventListener('loadstart', () => {
-                currentImage.style.display = 'none'
-                document.querySelector('.image-loader').style.display = 'inline-block'
-            })
-            xhr.addEventListener('load', (e) => {
-                currentImage.style.display = 'block'
-                document.querySelector('.image-loader').style.display = 'none'
-                newLoad.style.display = 'none'
-                share.style.display = 'inline-block'
-                xhrParse = JSON.parse(xhr.responseText)
-                shareTools.style.display = 'inline-block'
-                burger.style.display = 'inline-block'
-                shareTools.querySelector('.menu__url').value = xhrParse.url
-                console.log(xhr.responseText)
-            })
-            xhr.open('POST', 'https://neto-api.herokuapp.com/pic')
-
-            xhr.send(form)
+            xhrLoad(form)
         } else {
             error.style.display = 'block'
         }
@@ -72,6 +69,11 @@ document.querySelector('.wrap').addEventListener('drop', (event) => {
             error.style.display = 'none'
             currentImage.src = URL.createObjectURL(file[0])
             currentImage.style.display = 'block'
+            let form = new FormData()
+            form.append('title', file[0].name)
+            form.append('image', file[0])
+            xhrLoad(form)
+
         } else {
             error.querySelector('p').textContent = 'Чтобы загрузить новое изображение, пожалуйста, воспользуйтесь пунктом <<Загрузить новое>> в меню.'
             error.style.display = 'block'
@@ -80,6 +82,144 @@ document.querySelector('.wrap').addEventListener('drop', (event) => {
         error.style.display = 'block'
     }
 })
+
+
+function xhrLoad(form) {
+    xhr.addEventListener('loadstart', () => {
+
+        if (!loading) {
+          currentImage.style.display = 'none'
+          document.querySelector('.image-loader').style.display = 'inline-block'
+        }
+    })
+    xhr.addEventListener('load', (e) => {
+        currentImage.style.display = 'block'
+        document.querySelector('.image-loader').style.display = 'none'
+        newLoad.style.display = 'none'
+        share.style.display = 'inline-block'
+        xhrParse = JSON.parse(xhr.responseText)
+        sessionStorage.web = xhrParse.id
+        shareTools.style.display = 'inline-block'
+        burger.style.display = 'inline-block'
+        draw.style.display = 'none'
+        comments.style.display = 'none'
+        shareTools.querySelector('.menu__url').value = window.location.href
+        canvas.width = currentImage.clientWidth
+        canvas.height = currentImage.clientHeight
+        canvas.style.marginTop = `-${canvas.height/2}px`
+        img.height = canvas.height
+        img.style.marginTop = `-${img.height/2}px`
+        wsLoad(sessionStorage.web)
+        loading = true
+    })
+    xhr.open('POST', 'https://neto-api.herokuapp.com/pic')
+
+    xhr.send(form)
+}
+function wsLoad(id) {
+    if (!loading) {
+        let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${id}`)
+        ws.addEventListener('message', (event) => {
+            console.log('xaxa')
+            let info = JSON.parse(event.data)
+            console.log(info)
+            if (info.event === 'pic') {
+              if (info.pic.mask === undefined) {
+                img.src = info.pic.url
+              } else {
+                  img.src = info.pic.mask
+              }
+            } else if (info.event === 'mask') {
+              img.src = info.url
+              img.addEventListener('load', () => {
+                  ctx.clearRect(0, 0, canvas.width, canvas.height)
+              })
+            } else if (info.event === 'comment') {
+                let form = null
+                console.log(document.querySelectorAll('form'))
+                document.querySelectorAll('form').forEach((elem) => {
+                    if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
+                        form = elem
+                    }
+                })
+                if ((form === undefined) || (form === null)) {
+                    form = addForm(info.comment.left, info.comment.top)
+                }
+                let cloning = cloneComment.cloneNode(true)
+                let data = new Date(info.comment.timestamp)
+                console.log(form)
+                form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
+                cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
+                cloning.querySelector('.comment__message').textContent = info.comment.message
+
+
+            }
+
+        })
+    }
+}
+if (sessionStorage.web) {
+    // console.log('sad')
+
+    xhrGet()
+}
+
+
+function xhrGet() {
+    let url = `https://neto-api.herokuapp.com/pic/${sessionStorage.web}`
+    xhr.open('GET', url)
+    xhr.addEventListener('load', () => {
+        console.log(JSON.parse(xhr.responseText))
+        currentImage.src = JSON.parse(xhr.responseText).url
+        currentImage.style.display = 'inline-block'
+        share.style.display = 'inline-block'
+        shareTools.style.display = 'inline-block'
+        burger.style.display = 'inline-block'
+        shareTools.querySelector('.menu__url').value = currentImage.src
+        newLoad.style.display = 'none'
+        currentImage.addEventListener('load', () => {
+          canvas.width = currentImage.clientWidth
+          canvas.height = currentImage.clientHeight
+          canvas.style.marginTop = `-${canvas.height/2}px`
+          img.height = canvas.height
+          img.style.marginTop = `-${img.height/2}px`
+        })
+        if (JSON.parse(xhr.responseText).comments) {
+            console.log(JSON.parse(xhr.responseText).comments)
+            let obj = JSON.parse(xhr.responseText).comments
+            if (document.querySelectorAll('form').length === 0) {
+                for (let elem in obj) {
+                    let form = null
+                    if (document.querySelectorAll('form').length === 0) {
+                        form = addForm(obj[elem].left, obj[elem].top)
+                    } else {
+                        let control = false
+                        document.querySelectorAll('form').forEach(el => {
+                            if ((obj[elem].left === el.offsetLeft) && (obj[elem].top === el.offsetTop)) {
+                                form = el
+                                control = true
+                            }
+                        })
+                        if (!control) {
+                            form = addForm(obj[elem].left, obj[elem].top)
+                        }
+                    }
+                    let cloning = cloneComment.cloneNode(true)
+                    let data = new Date(obj[elem].timestamp)
+                    console.log(form)
+                    form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
+                    cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
+                    cloning.querySelector('.comment__message').textContent = obj[elem].message
+                }
+            }
+            // JSON.parse(xhr.responseText).comments.forEach(elem => {
+            //
+            // })
+
+        }
+    })
+    xhr.send()
+}
 
 let move = null
 let shiftX = 0
@@ -127,6 +267,7 @@ burger.addEventListener('click', (event) => {
     draw.style.display = 'inline-block'
     comments.style.display = 'inline-block'
     document.querySelector('.drag').style.display = 'inline-block'
+    canvas.style.pointerEvents = 'none'
 })
 comments.addEventListener('click', (event) => {
     document.querySelectorAll('.menu__item').forEach(e => e.style.display = 'none')
@@ -134,6 +275,7 @@ comments.addEventListener('click', (event) => {
     comments.style.display = 'inline-block'
     document.querySelector('.drag').style.display = 'inline-block'
     document.querySelector('.comments-tools').style.display = 'inline-block'
+    commentsForm.style.display = 'inline-block'
 })
 share.addEventListener('click', () => {
     document.querySelectorAll('.menu__item').forEach(e => e.style.display = 'none')
@@ -142,29 +284,233 @@ share.addEventListener('click', () => {
     shareTools.style.display = 'inline-block'
     document.querySelector('.drag').style.display = 'inline-block'
 })
+let color = null
+const canvas = document.createElement('canvas')
+const ctx = canvas.getContext('2d')
+canvas.style.position = 'relative'
+
+
+canvas.style.pointerEvents = 'none'
+canvas.style.top = '50%'
+// console.log(canvas.style.height/2)
+
+
+let img = document.createElement('img')
+
+
+
+div.appendChild(img)
+img.style.pointerEvents = 'none'
+img.style.position = 'absolute'
+img.style.top = '50%'
+
+
+
+div.appendChild(canvas)
+
 draw.addEventListener('click', () => {
     document.querySelectorAll('.menu__item').forEach(e => e.style.display = 'none')
     burger.style.display = 'inline-block'
     document.querySelector('.drag').style.display = 'inline-block'
     draw.style.display = 'inline-block'
     drawTools.style.display = 'inline-block'
+    let colors = document.querySelectorAll('.menu__color')
+    canvas.style.pointerEvents = 'auto'
+    colors.forEach(e => {
+        if (e.checked) {
+            color = e.value
+        }
+    })
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('menu__color')) {
+            colors.forEach(e => {
+                e.checked = false
+            })
+            event.target.checked = true
+            color = event.target.value
+        }
+    })
     drawing()
 })
+
+let picaso = true
 function drawing () {
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    let div = document.querySelector('.app')
-    canvas.style.position = 'relative'
-    canvas.width = currentImage.clientWidth
-    canvas.height = currentImage.clientHeight
-    div.appendChild(canvas)
+    let moving = false
+    let x = null
+    let y = null
     document.addEventListener('mousedown', (event) => {
         if (drawTools.style.display === 'inline-block') {
             if (event.target === canvas) {
+                picaso = false
+                x = event.offsetX
+                y = event.offsetY
+                ctx.fillStyle = color
                 ctx.beginPath();
                 ctx.arc(event.offsetX, event.offsetY, 2, 0, 2 * Math.PI);
                 ctx.fill()
+                moving = true
+            } else {
+                moving = false
+
             }
         }
     })
+    document.addEventListener('mousemove', (event) => {
+        if (moving) {
+            if (event.target === canvas) {
+                ctx.lineWidth = 4
+                ctx.strokeStyle = color
+                ctx.beginPath()
+                ctx.moveTo(x, y)
+                ctx.lineTo(event.offsetX, event.offsetY);
+                ctx.stroke();
+                ctx.closePath();
+                x = event.offsetX
+                y = event.offsetY
+            }
+        }
+    })
+    document.addEventListener('mouseup', (event) => {
+      if (moving) {
+        picaso = true
+        moving = false
+        canvas.toBlob(obj => ws.send(obj))
+      }
+    })
 }
+
+let marker = true
+
+// ws.addEventListener('close', event => {
+//     console.log(event.code);
+// });
+if (wsWeb) {
+    ws.addEventListener('message', (event) => {
+        console.log('xaxa')
+        let info = JSON.parse(event.data)
+        console.log(info)
+        if (info.event === 'pic') {
+          if (info.pic.mask === undefined) {
+            img.src = info.pic.url
+          } else {
+              img.src = info.pic.mask
+          }
+        } else if (info.event === 'mask') {
+          img.src = info.url
+          img.addEventListener('load', () => {
+              ctx.clearRect(0, 0, canvas.width, canvas.height)
+          })
+        } else if (info.event === 'comment') {
+            let form = null
+            console.log(document.querySelectorAll('form'))
+            document.querySelectorAll('form').forEach((elem) => {
+                if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
+                    form = elem
+                }
+            })
+            if ((form === undefined) || (form === null)) {
+                form = addForm(info.comment.left, info.comment.top)
+            }
+            let cloning = cloneComment.cloneNode(true)
+            let data = new Date(info.comment.timestamp)
+            console.log(form)
+            form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
+            cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
+            cloning.querySelector('.comment__message').textContent = info.comment.message
+
+
+        }
+
+    })
+}
+document.addEventListener('click', (event) => {
+    if (event.target.classList.contains('menu__toggle')) {
+        if (event.target.value === 'on') {
+            marker = true
+            document.querySelectorAll('.comments__form').forEach((e) => {
+                e.style.display = 'inline-block'
+
+            })
+        } else if (event.target.value === 'off') {
+            marker = false
+            document.querySelectorAll('.comments__form').forEach((e) => {
+                e.style.display = 'none'
+            })
+        }
+    }
+})
+
+
+
+document.addEventListener('click', (event) => {
+    if (picaso) {
+        if (event.target === currentImage) {
+            addForm(event.pageX, event.pageY)
+        }
+    }
+    if (event.target.classList.contains('comments__marker-checkbox')) {
+        document.querySelectorAll('.comments__marker-checkbox').forEach(e => {
+            e.checked = false
+            e.nextElementSibling.style.zIndex = 1
+        })
+        event.target.checked = true
+        event.target.nextElementSibling.style.zIndex = 200
+        event.target.nextElementSibling.style.position = 'absolute'
+    }
+    if (event.target.classList.contains('comments__close')) {
+        event.target.parentNode.previousElementSibling.checked = false
+    }
+    if (event.target.classList.contains('comments__submit')) {
+        event.preventDefault()
+        let textarea = event.target.previousElementSibling.previousElementSibling
+        if (textarea.value === '') {
+            console.log('пусто')
+        } else {
+            xhr.open('POST', `https://neto-api.herokuapp.com/pic/${sessionStorage.web}/comments`)
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+            xhr.addEventListener('loadstart', () => {
+                event.target.parentNode.querySelector('.comment .loader').style.display = 'block'
+            })
+            xhr.addEventListener('load', () => {
+                event.target.parentNode.querySelector('.comment .loader').style.display = 'none'
+            })
+            let forma = 'message=' + textarea.value + '&left=' + event.target.parentNode.parentNode.style.left.replace('px', '') + '&top=' + event.target.parentNode.parentNode.style.top.replace('px', '')
+            textarea.value = ''
+            xhr.send(forma)
+        }
+    }
+})
+console.log(window.location.href)
+function addForm(x, y) {
+    let clones = clone.cloneNode(true)
+    div.appendChild(clones)
+    clones.style.left = `${x}px`
+    clones.style.top = `${y}px`
+    clones.querySelector('.comment .loader').style.display = 'none'
+    document.querySelectorAll('.comments__marker-checkbox').forEach((e)=>e.checked = false)
+    clones.querySelector('.comments__marker-checkbox').checked = true
+    if (!marker) {
+        clones.style.display = 'none'
+    } else {
+        clones.style.display = 'inline-block'
+    }
+    return clones
+}
+// document.addEventListener('click', (event) => {
+//   if (event.target.classList.contains('comments__submit')) {
+//     let value = document.querySelector('.comments__input').value
+    // xhr.open('POST', `https://neto-api.herokuapp.com/pic/${sessionStorage.web}/comments`)
+//     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
+//     xhr.addEventListener('loadstart', () => {
+//       clones.querySelector('.comment .loader').style.display = 'inline-block'
+//     })
+//     xhr.addEventListener('load', () => {
+//       clones.querySelector('.comment .loader').style.display = 'none'
+//     })
+//   }
+// })
+
+// document.addEventListener('click', (event) => {
+//
+//
+// })
