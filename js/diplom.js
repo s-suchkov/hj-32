@@ -104,8 +104,9 @@ function xhrLoad(form) {
         sessionStorage.web = xhrParse.id
         burger.style.display = 'inline-block'
         draw.style.display = 'none'
-
-        shareTools.querySelector('.menu__url').value = location.href
+        // location.hash = 'id1'
+        window.location = `#${sessionStorage.web}`
+        shareTools.querySelector('.menu__url').value = window.location.href
         canvas.width = currentImage.clientWidth
         canvas.height = currentImage.clientHeight
         canvas.style.marginTop = `-${canvas.height/2}px`
@@ -160,7 +161,8 @@ function wsLoad(id) {
         })
     }
 }
-if (sessionStorage.web) {
+if ((sessionStorage.web) || (window.location.href.split('#')[1])) {
+    sessionStorage.web = window.location.href.split('#')[1]
     // console.log('sad')
     console.log('four')
     xhrGet()
@@ -178,7 +180,8 @@ function xhrGet() {
         comments.style.display = 'inline-block'
         document.querySelector('.comments-tools').style.display = 'inline-block'
         burger.style.display = 'inline-block'
-        shareTools.querySelector('.menu__url').value = location.href
+
+        shareTools.querySelector('.menu__url').value = window.location.href
         newLoad.style.display = 'none'
         currentImage.addEventListener('load', () => {
           canvas.width = currentImage.clientWidth
@@ -190,7 +193,7 @@ function xhrGet() {
         if (JSON.parse(xhr.responseText).comments) {
             console.log(JSON.parse(xhr.responseText).comments)
             let obj = JSON.parse(xhr.responseText).comments
-            if (document.querySelectorAll('form').length === 0) {
+            // if (document.querySelectorAll('form').length === 0) {
                 for (let elem in obj) {
                     let form = null
                     if (document.querySelectorAll('form').length === 0) {
@@ -214,7 +217,7 @@ function xhrGet() {
                     cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
                     cloning.querySelector('.comment__message').textContent = obj[elem].message
                 }
-            }
+            // }
             // JSON.parse(xhr.responseText).comments.forEach(elem => {
             //
             // })
