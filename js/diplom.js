@@ -429,6 +429,16 @@ ws.addEventListener('message', (event) => {
 })
 
 document.addEventListener('click', (event) => {
+    if (event.target.classList.contains('menu_copy')) {
+        // document.querySelector('.menu__url').focus()
+        document.querySelector('.menu__url').select()
+        try {
+            document.execCommand('copy')
+        }
+        catch(err) {
+            console.log(err)
+        }
+    }
     if (event.target.classList.contains('menu__toggle')) {
         if (event.target.value === 'on') {
             marker = true
