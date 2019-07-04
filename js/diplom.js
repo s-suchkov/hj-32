@@ -163,6 +163,7 @@ function wsLoad(id) {
 }
 if ((sessionStorage.web) || (window.location.href.split('#')[1])) {
     sessionStorage.web = window.location.href.split('#')[1]
+    ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
     // console.log('sad')
     console.log('four')
     xhrGet()
