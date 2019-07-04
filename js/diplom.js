@@ -82,6 +82,7 @@ document.querySelector('.wrap').addEventListener('drop', (event) => {
 
 
 function xhrLoad(form) {
+    console.log('one')
     xhr.addEventListener('loadstart', () => {
 
         if (!loading) {
@@ -93,29 +94,33 @@ function xhrLoad(form) {
         currentImage.style.display = 'block'
         document.querySelector('.image-loader').style.display = 'none'
         newLoad.style.display = 'none'
-        share.style.display = 'inline-block'
         xhrParse = JSON.parse(xhr.responseText)
+
+        if (!sessionStorage.web) {
+            shareTools.style.display = 'inline-block'
+            share.style.display = 'inline-block'
+            comments.style.display = 'none'
+        }
         sessionStorage.web = xhrParse.id
-        shareTools.style.display = 'inline-block'
         burger.style.display = 'inline-block'
         draw.style.display = 'none'
-        comments.style.display = 'none'
+
         shareTools.querySelector('.menu__url').value = location.href
         canvas.width = currentImage.clientWidth
         canvas.height = currentImage.clientHeight
         canvas.style.marginTop = `-${canvas.height/2}px`
         img.height = canvas.height
         img.style.marginTop = `-${img.height/2}px`
-
+        console.log('two')
         ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
         wsLoad(sessionStorage.web)
         loading = true
     })
     xhr.open('POST', 'https://neto-api.herokuapp.com/pic')
-
     xhr.send(form)
 }
 function wsLoad(id) {
+    console.log('free')
     if (!loading) {
         // let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${id}`)
         ws.addEventListener('message', (event) => {
@@ -135,7 +140,6 @@ function wsLoad(id) {
               // })
             } else if (info.event === 'comment') {
                 let form = null
-                console.log(document.querySelectorAll('form'))
                 document.querySelectorAll('form').forEach((elem) => {
                     if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
                         form = elem
@@ -146,7 +150,6 @@ function wsLoad(id) {
                 }
                 let cloning = cloneComment.cloneNode(true)
                 let data = new Date(info.comment.timestamp)
-                console.log(form)
                 form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
                 cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
                 cloning.querySelector('.comment__message').textContent = info.comment.message
@@ -159,16 +162,17 @@ function wsLoad(id) {
 }
 if (sessionStorage.web) {
     // console.log('sad')
-
+    console.log('four')
     xhrGet()
 }
 
 
 function xhrGet() {
+    console.log('five')
     let url = `https://neto-api.herokuapp.com/pic/${sessionStorage.web}`
     xhr.open('GET', url)
     xhr.addEventListener('load', () => {
-        console.log(JSON.parse(xhr.responseText))
+        console.log('six')
         currentImage.src = JSON.parse(xhr.responseText).url
         currentImage.style.display = 'inline-block'
         comments.style.display = 'inline-block'
@@ -384,7 +388,7 @@ let marker = true
 //     console.log(event.code);
 // });
 ws.addEventListener('message', (event) => {
-        console.log('xaxa')
+        console.log('seven')
         let info = JSON.parse(event.data)
         console.log(info)
         if (info.event === 'pic') {
@@ -470,6 +474,7 @@ document.addEventListener('click', (event) => {
                 event.target.parentNode.querySelector('.comment .loader').style.display = 'block'
             })
             xhr.addEventListener('load', () => {
+                console.log('eith')
                 event.target.parentNode.querySelector('.comment .loader').style.display = 'none'
             })
             let forma = 'message=' + textarea.value + '&left=' + event.target.parentNode.parentNode.style.left.replace('px', '') + '&top=' + event.target.parentNode.parentNode.style.top.replace('px', '')
@@ -480,6 +485,7 @@ document.addEventListener('click', (event) => {
 })
 console.log(window.location.href)
 function addForm(x, y) {
+    console.log('nine')
     let clones = clone.cloneNode(true)
     div.appendChild(clones)
     clones.style.left = `${x}px`
