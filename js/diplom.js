@@ -163,7 +163,7 @@ function wsLoad(id) {
 }
 if ((sessionStorage.web) || (window.location.href.split('#')[1])) {
     sessionStorage.web = window.location.href.split('#')[1]
-    ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
+    ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
     // console.log('sad')
     console.log('four')
     xhrGet()
@@ -403,9 +403,9 @@ ws.addEventListener('message', (event) => {
           }
         } else if (info.event === 'mask') {
           img.src = info.url
-          img.addEventListener('load', () => {
-              ctx.clearRect(0, 0, canvas.width, canvas.height)
-          })
+          // img.addEventListener('load', () => {
+          //     ctx.clearRect(0, 0, canvas.width, canvas.height)
+          // })
         } else if (info.event === 'comment') {
             let form = null
             console.log(document.querySelectorAll('form'))
