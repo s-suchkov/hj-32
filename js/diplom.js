@@ -174,7 +174,7 @@ function xhrGet() {
         comments.style.display = 'inline-block'
         document.querySelector('.comments-tools').style.display = 'inline-block'
         burger.style.display = 'inline-block'
-        shareTools.querySelector('.menu__url').value = currentImage.src
+        shareTools.querySelector('.menu__url').value = location.href
         newLoad.style.display = 'none'
         currentImage.addEventListener('load', () => {
           canvas.width = currentImage.clientWidth
