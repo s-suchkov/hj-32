@@ -11,7 +11,11 @@ const xhr = new XMLHttpRequest()
 let loading = false
 const shareTools = document.querySelector('.share-tools')
 const drawTools = document.querySelector('.draw-tools')
-let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
+console.log(window.location.href.split('#')[1])
+
+
+let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
+
 
 let div = document.querySelector('.app')
 let comment = commentsForm.querySelector('.comment')
@@ -69,8 +73,9 @@ document.querySelector('.wrap').addEventListener('drop', (event) => {
             let form = new FormData()
             form.append('title', file[0].name)
             form.append('image', file[0])
-            xhrLoad(form)
 
+            xhrLoad(form)
+            // window.location.reload()
         } else {
             error.querySelector('p').textContent = 'Чтобы загрузить новое изображение, пожалуйста, воспользуйтесь пунктом <<Загрузить новое>> в меню.'
             error.style.display = 'block'
@@ -102,6 +107,7 @@ function xhrLoad(form) {
             comments.style.display = 'none'
         }
         sessionStorage.web = xhrParse.id
+
         burger.style.display = 'inline-block'
         draw.style.display = 'none'
         // location.hash = 'id1'
@@ -112,7 +118,10 @@ function xhrLoad(form) {
         canvas.style.marginTop = `-${canvas.height/2}px`
         img.height = canvas.height
         img.style.marginTop = `-${img.height/2}px`
+
         console.log('two')
+        // ws.open()
+        
         ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
         wsLoad(sessionStorage.web)
         loading = true
@@ -120,7 +129,9 @@ function xhrLoad(form) {
     xhr.open('POST', 'https://neto-api.herokuapp.com/pic')
     xhr.send(form)
 }
+
 function wsLoad(id) {
+
     console.log('free')
     if (!loading) {
         // let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${id}`)
@@ -161,10 +172,11 @@ function wsLoad(id) {
         })
     }
 }
+
 if ((sessionStorage.web) || (window.location.href.split('#')[1])) {
     sessionStorage.web = window.location.href.split('#')[1]
-    ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
-    // console.log('sad')
+    console.log(window.location.href.split('#')[1])
+    console.log(sessionStorage.web)
     console.log('four')
     xhrGet()
 }
@@ -391,6 +403,8 @@ let marker = true
 // ws.addEventListener('close', event => {
 //     console.log(event.code);
 // });
+
+
 ws.addEventListener('message', (event) => {
         console.log('seven')
         let info = JSON.parse(event.data)
@@ -435,6 +449,7 @@ document.addEventListener('click', (event) => {
         document.querySelector('.menu__url').select()
         try {
             document.execCommand('copy')
+
         }
         catch(err) {
             console.log(err)
@@ -467,11 +482,14 @@ document.addEventListener('click', (event) => {
     if (event.target.classList.contains('comments__marker-checkbox')) {
         document.querySelectorAll('.comments__marker-checkbox').forEach(e => {
             e.checked = false
-            e.nextElementSibling.style.zIndex = 1
+            e.parentNode.style.zIndex = 1
+            // e.previousElementSibling.style.position = 'absolute'
+            // e.style.position = 'absolute'
         })
         event.target.checked = true
-        event.target.nextElementSibling.style.zIndex = 200
-        event.target.nextElementSibling.style.position = 'absolute'
+        event.target.parentNode.style.zIndex = 200
+
+        // event.target.nextElementSibling.style.position = 'absolute'
     }
     if (event.target.classList.contains('comments__close')) {
         event.target.parentNode.previousElementSibling.checked = false
