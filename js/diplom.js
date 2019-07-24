@@ -12,9 +12,25 @@ let loading = false
 const shareTools = document.querySelector('.share-tools')
 const drawTools = document.querySelector('.draw-tools')
 console.log(window.location.href.split('#')[1])
+let code = null
+let ws
+
+// let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/null`)
+// let timeWs = setInterval(function() {
+    // ws.close()
+    // ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
+    // console.log(code)
+
+// }, 3000)
+// setInterval(function() {
+    // if (window.location.href.split('#')[1]) {
+//         console.log(code, 'dasd')
+//         clearInterval(timeWs)
+//
+//     }
+// }, 1000)
 
 
-let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
 
 
 let div = document.querySelector('.app')
@@ -42,16 +58,17 @@ newLoad.addEventListener('click', () => {
     input.addEventListener('change', (event) => {
         let file = event.currentTarget.files[0]
         if ((file.type === 'image/jpeg') || (file.type === 'image/png')) {
+            let form = new FormData()
+            form.append('title', file.name)
+            form.append('image', file)
+            xhrLoad(form)
             currentImage.src = URL.createObjectURL(file)
             currentImage.style.display = 'block'
             currentImage.addEventListener('load', (e) => {
                 error.style.display = 'none'
                 URL.revokeObjectURL(e.target.src)
             })
-            let form = new FormData()
-            form.append('title', file.name)
-            form.append('image', file)
-            xhrLoad(form)
+
         } else {
             error.style.display = 'block'
         }
@@ -67,14 +84,15 @@ document.querySelector('.wrap').addEventListener('drop', (event) => {
     let file = Array.from(event.dataTransfer.files)
     if ((file[0].type === 'image/jpeg') || (file[0].type === 'image/png')) {
         if (currentImage.style.display === 'none') {
-            error.style.display = 'none'
-            currentImage.src = URL.createObjectURL(file[0])
-            currentImage.style.display = 'block'
             let form = new FormData()
             form.append('title', file[0].name)
             form.append('image', file[0])
 
             xhrLoad(form)
+            error.style.display = 'none'
+            currentImage.src = URL.createObjectURL(file[0])
+            currentImage.style.display = 'block'
+
             // window.location.reload()
         } else {
             error.querySelector('p').textContent = 'Чтобы загрузить новое изображение, пожалуйста, воспользуйтесь пунктом <<Загрузить новое>> в меню.'
@@ -99,6 +117,7 @@ function xhrLoad(form) {
         currentImage.style.display = 'block'
         document.querySelector('.image-loader').style.display = 'none'
         newLoad.style.display = 'none'
+        console.log('Alica')
         xhrParse = JSON.parse(xhr.responseText)
 
         if (!sessionStorage.web) {
@@ -121,57 +140,60 @@ function xhrLoad(form) {
 
         console.log('two')
         // ws.open()
-        
-        ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${sessionStorage.web}`)
-        wsLoad(sessionStorage.web)
+
+
+        // wsLoad(sessionStorage.web)
         loading = true
     })
     xhr.open('POST', 'https://neto-api.herokuapp.com/pic')
     xhr.send(form)
 }
-
-function wsLoad(id) {
-
-    console.log('free')
-    if (!loading) {
-        // let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${id}`)
-        ws.addEventListener('message', (event) => {
-            console.log('xaxa')
-            let info = JSON.parse(event.data)
-            console.log(info)
-            if (info.event === 'pic') {
-              if (info.pic.mask === undefined) {
-                img.src = info.pic.url
-              } else {
-                  img.src = info.pic.mask
-              }
-            } else if (info.event === 'mask') {
-              img.src = info.url
-              // img.addEventListener('load', () => {
-              //     ctx.clearRect(0, 0, canvas.width, canvas.height)
-              // })
-            } else if (info.event === 'comment') {
-                let form = null
-                document.querySelectorAll('form').forEach((elem) => {
-                    if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
-                        form = elem
-                    }
-                })
-                if ((form === undefined) || (form === null)) {
-                    form = addForm(info.comment.left, info.comment.top)
-                }
-                let cloning = cloneComment.cloneNode(true)
-                let data = new Date(info.comment.timestamp)
-                form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
-                cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
-                cloning.querySelector('.comment__message').textContent = info.comment.message
-
-
-            }
-
-        })
-    }
-}
+// currentImage.addEventListener('load', ()=> {
+//     console.log(sessionStorage.web)
+//     ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
+// })
+// function wsLoad(id) {
+//
+//     console.log('free')
+//     if (!loading) {
+//         // let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${id}`)
+//         ws.addEventListener('message', (event) => {
+//             console.log('xaxa')
+//             let info = JSON.parse(event.data)
+//             console.log(info)
+//             if (info.event === 'pic') {
+//               if (info.pic.mask === undefined) {
+//                 img.src = info.pic.url
+//               } else {
+//                   img.src = info.pic.mask
+//               }
+//             } else if (info.event === 'mask') {
+//               img.src = info.url
+//               // img.addEventListener('load', () => {
+//               //     ctx.clearRect(0, 0, canvas.width, canvas.height)
+//               // })
+//             } else if (info.event === 'comment') {
+//                 let form = null
+//                 document.querySelectorAll('form').forEach((elem) => {
+//                     if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
+//                         form = elem
+//                     }
+//                 })
+//                 if ((form === undefined) || (form === null)) {
+//                     form = addForm(info.comment.left, info.comment.top)
+//                 }
+//                 let cloning = cloneComment.cloneNode(true)
+//                 let data = new Date(info.comment.timestamp)
+//                 form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
+//                 cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
+//                 cloning.querySelector('.comment__message').textContent = info.comment.message
+//
+//
+//             }
+//
+//         })
+//     }
+// }
 
 if ((sessionStorage.web) || (window.location.href.split('#')[1])) {
     sessionStorage.web = window.location.href.split('#')[1]
@@ -206,11 +228,12 @@ function xhrGet() {
         if (JSON.parse(xhr.responseText).comments) {
             console.log(JSON.parse(xhr.responseText).comments)
             let obj = JSON.parse(xhr.responseText).comments
-            // if (document.querySelectorAll('form').length === 0) {
+            if (document.querySelectorAll('form').length === 0) {
                 for (let elem in obj) {
                     let form = null
                     if (document.querySelectorAll('form').length === 0) {
                         form = addForm(obj[elem].left, obj[elem].top)
+                        console.log('a')
                     } else {
                         let control = false
                         document.querySelectorAll('form').forEach(el => {
@@ -221,6 +244,7 @@ function xhrGet() {
                         })
                         if (!control) {
                             form = addForm(obj[elem].left, obj[elem].top)
+                            console.log('b')
                         }
                     }
                     let cloning = cloneComment.cloneNode(true)
@@ -230,7 +254,7 @@ function xhrGet() {
                     cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
                     cloning.querySelector('.comment__message').textContent = obj[elem].message
                 }
-            // }
+            }
             // JSON.parse(xhr.responseText).comments.forEach(elem => {
             //
             // })
@@ -399,13 +423,20 @@ function drawing () {
 }
 
 let marker = true
+function connect() {
+    ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
+    ws.addEventListener('open', event => {
+        console.log('open');
 
-// ws.addEventListener('close', event => {
-//     console.log(event.code);
-// });
-
-
-ws.addEventListener('message', (event) => {
+    });
+    ws.addEventListener('close', event => {
+        console.log(event.code);
+        console.log('close')
+        setTimeout(function() {
+            connect();
+        }, 1000);
+    });
+    ws.addEventListener('message', (event) => {
         console.log('seven')
         let info = JSON.parse(event.data)
         console.log(info)
@@ -440,8 +471,47 @@ ws.addEventListener('message', (event) => {
 
 
         }
+    })
+}
+connect()
+// function connection(event) {
+//         console.log('seven')
+//         let info = JSON.parse(event.data)
+//         console.log(info)
+//         if (info.event === 'pic') {
+//           if (info.pic.mask === undefined) {
+//             img.src = info.pic.url
+//           } else {
+//               img.src = info.pic.mask
+//           }
+//         } else if (info.event === 'mask') {
+//           img.src = info.url
+//           // img.addEventListener('load', () => {
+//           //     ctx.clearRect(0, 0, canvas.width, canvas.height)
+//           // })
+//         } else if (info.event === 'comment') {
+//             let form = null
+//             console.log(document.querySelectorAll('form'))
+//             document.querySelectorAll('form').forEach((elem) => {
+//                 if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
+//                     form = elem
+//                 }
+//             })
+//             if ((form === undefined) || (form === null)) {
+//                 form = addForm(info.comment.left, info.comment.top)
+//             }
+//             let cloning = cloneComment.cloneNode(true)
+//             let data = new Date(info.comment.timestamp)
+//             console.log(form)
+//             form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
+//             cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
+//             cloning.querySelector('.comment__message').textContent = info.comment.message
+//
+//
+//         }
+//
+// }
 
-})
 
 document.addEventListener('click', (event) => {
     if (event.target.classList.contains('menu_copy')) {
