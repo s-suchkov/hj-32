@@ -14,25 +14,6 @@ const drawTools = document.querySelector('.draw-tools')
 console.log(window.location.href.split('#')[1])
 let code = null
 let ws
-
-// let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/null`)
-// let timeWs = setInterval(function() {
-    // ws.close()
-    // ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
-    // console.log(code)
-
-// }, 3000)
-// setInterval(function() {
-    // if (window.location.href.split('#')[1]) {
-//         console.log(code, 'dasd')
-//         clearInterval(timeWs)
-//
-//     }
-// }, 1000)
-
-
-
-
 let div = document.querySelector('.app')
 let comment = commentsForm.querySelector('.comment')
 let cloneComment = comment.cloneNode(true)
@@ -48,11 +29,11 @@ share.style.display = 'none'
 burger.style.display = 'none'
 newLoad.type = 'file'
 currentImage.style.display = 'none'
-// commentsForm.style.display = 'none'
 
 let xhrParse = null
 let input = document.createElement('input')
 input.type = 'file'
+
 newLoad.addEventListener('click', () => {
     input.click()
     input.addEventListener('change', (event) => {
@@ -68,7 +49,6 @@ newLoad.addEventListener('click', () => {
                 error.style.display = 'none'
                 URL.revokeObjectURL(e.target.src)
             })
-
         } else {
             error.style.display = 'block'
         }
@@ -87,13 +67,10 @@ document.querySelector('.wrap').addEventListener('drop', (event) => {
             let form = new FormData()
             form.append('title', file[0].name)
             form.append('image', file[0])
-
             xhrLoad(form)
             error.style.display = 'none'
             currentImage.src = URL.createObjectURL(file[0])
             currentImage.style.display = 'block'
-
-            // window.location.reload()
         } else {
             error.querySelector('p').textContent = 'Чтобы загрузить новое изображение, пожалуйста, воспользуйтесь пунктом <<Загрузить новое>> в меню.'
             error.style.display = 'block'
@@ -107,29 +84,24 @@ document.querySelector('.wrap').addEventListener('drop', (event) => {
 function xhrLoad(form) {
     console.log('one')
     xhr.addEventListener('loadstart', () => {
-
         if (!loading) {
-          currentImage.style.display = 'none'
-          document.querySelector('.image-loader').style.display = 'inline-block'
+            currentImage.style.display = 'none'
+            document.querySelector('.image-loader').style.display = 'inline-block'
         }
     })
     xhr.addEventListener('load', (e) => {
         currentImage.style.display = 'block'
         document.querySelector('.image-loader').style.display = 'none'
         newLoad.style.display = 'none'
-        console.log('Alica')
         xhrParse = JSON.parse(xhr.responseText)
-
         if (!sessionStorage.web) {
             shareTools.style.display = 'inline-block'
             share.style.display = 'inline-block'
             comments.style.display = 'none'
         }
         sessionStorage.web = xhrParse.id
-
         burger.style.display = 'inline-block'
         draw.style.display = 'none'
-        // location.hash = 'id1'
         window.location = `#${sessionStorage.web}`
         shareTools.querySelector('.menu__url').value = window.location.href
         canvas.width = currentImage.clientWidth
@@ -137,103 +109,44 @@ function xhrLoad(form) {
         canvas.style.marginTop = `-${canvas.height/2}px`
         img.height = canvas.height
         img.style.marginTop = `-${img.height/2}px`
-
-        console.log('two')
-        // ws.open()
-
-
-        // wsLoad(sessionStorage.web)
         loading = true
     })
     xhr.open('POST', 'https://neto-api.herokuapp.com/pic')
     xhr.send(form)
 }
-// currentImage.addEventListener('load', ()=> {
-//     console.log(sessionStorage.web)
-//     ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
-// })
-// function wsLoad(id) {
-//
-//     console.log('free')
-//     if (!loading) {
-//         // let ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${id}`)
-//         ws.addEventListener('message', (event) => {
-//             console.log('xaxa')
-//             let info = JSON.parse(event.data)
-//             console.log(info)
-//             if (info.event === 'pic') {
-//               if (info.pic.mask === undefined) {
-//                 img.src = info.pic.url
-//               } else {
-//                   img.src = info.pic.mask
-//               }
-//             } else if (info.event === 'mask') {
-//               img.src = info.url
-//               // img.addEventListener('load', () => {
-//               //     ctx.clearRect(0, 0, canvas.width, canvas.height)
-//               // })
-//             } else if (info.event === 'comment') {
-//                 let form = null
-//                 document.querySelectorAll('form').forEach((elem) => {
-//                     if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
-//                         form = elem
-//                     }
-//                 })
-//                 if ((form === undefined) || (form === null)) {
-//                     form = addForm(info.comment.left, info.comment.top)
-//                 }
-//                 let cloning = cloneComment.cloneNode(true)
-//                 let data = new Date(info.comment.timestamp)
-//                 form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
-//                 cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
-//                 cloning.querySelector('.comment__message').textContent = info.comment.message
-//
-//
-//             }
-//
-//         })
-//     }
-// }
 
 if ((sessionStorage.web) || (window.location.href.split('#')[1])) {
     sessionStorage.web = window.location.href.split('#')[1]
-    console.log(window.location.href.split('#')[1])
-    console.log(sessionStorage.web)
-    console.log('four')
     xhrGet()
 }
 
-
 function xhrGet() {
-    console.log('five')
     let url = `https://neto-api.herokuapp.com/pic/${sessionStorage.web}`
     xhr.open('GET', url)
     xhr.addEventListener('load', () => {
-        console.log('six')
         currentImage.src = JSON.parse(xhr.responseText).url
         currentImage.style.display = 'inline-block'
+        document.querySelectorAll('.menu__item').forEach(e => e.style.display = 'none')
+        document.querySelector('.drag').style.display = 'inline-block'
         comments.style.display = 'inline-block'
         document.querySelector('.comments-tools').style.display = 'inline-block'
         burger.style.display = 'inline-block'
-
         shareTools.querySelector('.menu__url').value = window.location.href
         newLoad.style.display = 'none'
         currentImage.addEventListener('load', () => {
-          canvas.width = currentImage.clientWidth
-          canvas.height = currentImage.clientHeight
-          canvas.style.marginTop = `-${canvas.height/2}px`
-          img.height = canvas.height
-          img.style.marginTop = `-${img.height/2}px`
+            canvas.width = currentImage.clientWidth
+            canvas.height = currentImage.clientHeight
+            canvas.style.marginTop = `-${canvas.height/2}px`
+            img.height = canvas.height
+            img.style.marginTop = `-${img.height/2}px`
         })
         if (JSON.parse(xhr.responseText).comments) {
-            console.log(JSON.parse(xhr.responseText).comments)
             let obj = JSON.parse(xhr.responseText).comments
             if (document.querySelectorAll('form').length === 0) {
                 for (let elem in obj) {
                     let form = null
                     if (document.querySelectorAll('form').length === 0) {
                         form = addForm(obj[elem].left, obj[elem].top)
-                        console.log('a')
                     } else {
                         let control = false
                         document.querySelectorAll('form').forEach(el => {
@@ -244,21 +157,15 @@ function xhrGet() {
                         })
                         if (!control) {
                             form = addForm(obj[elem].left, obj[elem].top)
-                            console.log('b')
                         }
                     }
                     let cloning = cloneComment.cloneNode(true)
                     let data = new Date(obj[elem].timestamp)
-                    console.log(form)
                     form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
                     cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
                     cloning.querySelector('.comment__message').textContent = obj[elem].message
                 }
             }
-            // JSON.parse(xhr.responseText).comments.forEach(elem => {
-            //
-            // })
-
         }
     })
     xhr.send()
@@ -312,6 +219,7 @@ burger.addEventListener('click', (event) => {
     document.querySelector('.drag').style.display = 'inline-block'
     canvas.style.pointerEvents = 'none'
 })
+
 comments.addEventListener('click', (event) => {
     document.querySelectorAll('.menu__item').forEach(e => e.style.display = 'none')
     burger.style.display = 'inline-block'
@@ -320,6 +228,7 @@ comments.addEventListener('click', (event) => {
     document.querySelector('.comments-tools').style.display = 'inline-block'
     commentsForm.style.display = 'inline-block'
 })
+
 share.addEventListener('click', () => {
     document.querySelectorAll('.menu__item').forEach(e => e.style.display = 'none')
     burger.style.display = 'inline-block'
@@ -327,31 +236,23 @@ share.addEventListener('click', () => {
     shareTools.style.display = 'inline-block'
     document.querySelector('.drag').style.display = 'inline-block'
 })
+
 let color = null
 const canvas = document.createElement('canvas')
 const ctx = canvas.getContext('2d')
 canvas.style.position = 'relative'
-
-
 canvas.style.pointerEvents = 'none'
 canvas.style.top = '50%'
-// console.log(canvas.style.height/2)
-
-
 let img = document.createElement('img')
-
-
-
 div.appendChild(img)
 img.style.pointerEvents = 'none'
 img.style.position = 'absolute'
 img.style.top = '50%'
-
-
-
 div.appendChild(canvas)
 
 draw.addEventListener('click', () => {
+    ws.close()
+    ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
     document.querySelectorAll('.menu__item').forEach(e => e.style.display = 'none')
     burger.style.display = 'inline-block'
     document.querySelector('.drag').style.display = 'inline-block'
@@ -377,6 +278,7 @@ draw.addEventListener('click', () => {
 })
 
 let picaso = true
+
 function drawing () {
     let moving = false
     let x = null
@@ -427,7 +329,6 @@ function connect() {
     ws = new WebSocket(`wss://neto-api.herokuapp.com/pic/${window.location.href.split('#')[1]}`)
     ws.addEventListener('open', event => {
         console.log('open');
-
     });
     ws.addEventListener('close', event => {
         console.log(event.code);
@@ -437,23 +338,19 @@ function connect() {
         }, 1000);
     });
     ws.addEventListener('message', (event) => {
-        console.log('seven')
         let info = JSON.parse(event.data)
-        console.log(info)
         if (info.event === 'pic') {
           if (info.pic.mask === undefined) {
+            console.log('image')
             img.src = info.pic.url
           } else {
               img.src = info.pic.mask
           }
         } else if (info.event === 'mask') {
+          console.log('imagemask')
           img.src = info.url
-          // img.addEventListener('load', () => {
-          //     ctx.clearRect(0, 0, canvas.width, canvas.height)
-          // })
         } else if (info.event === 'comment') {
             let form = null
-            console.log(document.querySelectorAll('form'))
             document.querySelectorAll('form').forEach((elem) => {
                 if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
                     form = elem
@@ -464,62 +361,20 @@ function connect() {
             }
             let cloning = cloneComment.cloneNode(true)
             let data = new Date(info.comment.timestamp)
-            console.log(form)
             form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
             cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
             cloning.querySelector('.comment__message').textContent = info.comment.message
-
-
         }
     })
 }
 connect()
-// function connection(event) {
-//         console.log('seven')
-//         let info = JSON.parse(event.data)
-//         console.log(info)
-//         if (info.event === 'pic') {
-//           if (info.pic.mask === undefined) {
-//             img.src = info.pic.url
-//           } else {
-//               img.src = info.pic.mask
-//           }
-//         } else if (info.event === 'mask') {
-//           img.src = info.url
-//           // img.addEventListener('load', () => {
-//           //     ctx.clearRect(0, 0, canvas.width, canvas.height)
-//           // })
-//         } else if (info.event === 'comment') {
-//             let form = null
-//             console.log(document.querySelectorAll('form'))
-//             document.querySelectorAll('form').forEach((elem) => {
-//                 if ((elem.offsetLeft === info.comment.left) && (elem.offsetTop === info.comment.top)) {
-//                     form = elem
-//                 }
-//             })
-//             if ((form === undefined) || (form === null)) {
-//                 form = addForm(info.comment.left, info.comment.top)
-//             }
-//             let cloning = cloneComment.cloneNode(true)
-//             let data = new Date(info.comment.timestamp)
-//             console.log(form)
-//             form.querySelector('.comments__body').insertBefore(cloning, form.querySelector('textarea').previousElementSibling)
-//             cloning.querySelector('.comment__time').textContent = data.toLocaleString('ru')
-//             cloning.querySelector('.comment__message').textContent = info.comment.message
-//
-//
-//         }
-//
-// }
 
 
 document.addEventListener('click', (event) => {
     if (event.target.classList.contains('menu_copy')) {
-        // document.querySelector('.menu__url').focus()
         document.querySelector('.menu__url').select()
         try {
             document.execCommand('copy')
-
         }
         catch(err) {
             console.log(err)
@@ -530,7 +385,6 @@ document.addEventListener('click', (event) => {
             marker = true
             document.querySelectorAll('.comments__form').forEach((e) => {
                 e.style.display = 'inline-block'
-
             })
         } else if (event.target.value === 'off') {
             marker = false
@@ -553,13 +407,9 @@ document.addEventListener('click', (event) => {
         document.querySelectorAll('.comments__marker-checkbox').forEach(e => {
             e.checked = false
             e.parentNode.style.zIndex = 1
-            // e.previousElementSibling.style.position = 'absolute'
-            // e.style.position = 'absolute'
         })
         event.target.checked = true
         event.target.parentNode.style.zIndex = 200
-
-        // event.target.nextElementSibling.style.position = 'absolute'
     }
     if (event.target.classList.contains('comments__close')) {
         event.target.parentNode.previousElementSibling.checked = false
@@ -576,7 +426,6 @@ document.addEventListener('click', (event) => {
                 event.target.parentNode.querySelector('.comment .loader').style.display = 'block'
             })
             xhr.addEventListener('load', () => {
-                console.log('eith')
                 event.target.parentNode.querySelector('.comment .loader').style.display = 'none'
             })
             let forma = 'message=' + textarea.value + '&left=' + event.target.parentNode.parentNode.style.left.replace('px', '') + '&top=' + event.target.parentNode.parentNode.style.top.replace('px', '')
@@ -585,9 +434,8 @@ document.addEventListener('click', (event) => {
         }
     }
 })
-console.log(window.location.href)
+
 function addForm(x, y) {
-    console.log('nine')
     let clones = clone.cloneNode(true)
     div.appendChild(clones)
     clones.style.left = `${x}px`
@@ -602,21 +450,3 @@ function addForm(x, y) {
     }
     return clones
 }
-// document.addEventListener('click', (event) => {
-//   if (event.target.classList.contains('comments__submit')) {
-//     let value = document.querySelector('.comments__input').value
-    // xhr.open('POST', `https://neto-api.herokuapp.com/pic/${sessionStorage.web}/comments`)
-//     xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
-//     xhr.addEventListener('loadstart', () => {
-//       clones.querySelector('.comment .loader').style.display = 'inline-block'
-//     })
-//     xhr.addEventListener('load', () => {
-//       clones.querySelector('.comment .loader').style.display = 'none'
-//     })
-//   }
-// })
-
-// document.addEventListener('click', (event) => {
-//
-//
-// })
