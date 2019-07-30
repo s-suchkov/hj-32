@@ -436,6 +436,11 @@ document.addEventListener('click', (event) => {
 })
 
 function addForm(x, y) {
+    document.querySelectorAll('.comments__form').forEach(e => {
+        if (!e.querySelector('.comment__message')) {
+            e.parentNode.removeChild(e)
+        }
+    })
     let clones = clone.cloneNode(true)
     div.appendChild(clones)
     clones.style.left = `${x}px`
